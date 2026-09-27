@@ -7,10 +7,12 @@ out vec4 f_color;
 // Uniform configurado por tu clase Renderizador
 uniform sampler2D u_screen_texture;
 
-// Parámetros del filtro Dithering
-const float COLOR_LEVELS = 4.0; // Cantidad de tonos por canal (menor número = más retro)
+// --- [NUEVO] UNIFORMS PARA PERSONALIZAR EL EFECTO ---
+uniform float u_color_levels = 4.0;     // Controla los tonos por canal (Reemplaza a COLOR_LEVELS, ej: 4.0)
+uniform float u_pixel_size = 1.0;       // Controla la pixelación / tamaño del grano retro (por defecto 1.0)
+uniform float u_dither_intensity = 1.0; // Fuerza del granulado de la matriz Bayer (de 0.0 a 1.0)
 
-// Sintaxis explícita float[16] para evitar fallos de inicialización en GLSL 330
+// Sintaxis explícita float[16] que ya te funcionaba perfectamente
 const float bayerMatrix[16] = float[16](
      0.0 / 16.0,  8.0 / 16.0,  2.0 / 16.0, 10.0 / 16.0,
     12.0 / 16.0,  4.0 / 16.0, 14.0 / 16.0,  6.0 / 16.0,
@@ -22,32 +24,44 @@ void main() {
     // CORRECCIÓN DE INVERSIÓN VERTICAL:
     vec2 flippedTexcoord = vec2(v_texcoord.x, 1.0 - v_texcoord.y);
 
-    // 1. Obtener el color original usando la coordenada corregida
-    vec4 originalColor = texture(u_screen_texture, flippedTexcoord);
-    
-    // 2. Detectar el tamaño del búfer de captura automáticamente
+    // Asegurar valores mínimos seguros para evitar crasheos por división por cero
+    float levels = max(u_color_levels, 2.0);
+
+    // Detectar el tamaño del búfer de captura automáticamente
     ivec2 texSize = textureSize(u_screen_texture, 0);
+    vec2 screenResolution = vec2(float(texSize.x), float(texSize.y));
+
+    // [NUEVO] Aplicamos pixelación usando el uniform u_pixel_size si es mayor que 1.0
+    vec2 pixelatedCoord = flippedTexcoord;
+    if (u_pixel_size > 1.05) {
+        vec2 virtualResolution = screenResolution / u_pixel_size;
+        pixelatedCoord = (floor(flippedTexcoord * virtualResolution) + 0.5) / virtualResolution;
+    }
+
+    // 1. Obtener el color original usando la coordenada (con o sin pixelación)
+    vec4 originalColor = texture(u_screen_texture, pixelatedCoord);
     
-    // 3. Obtener la posición entera del píxel en pantalla de forma segura
-    int px = int(flippedTexcoord.x * float(texSize.x));
-    int py = int(flippedTexcoord.y * float(texSize.y));
+    // 2. Obtener la posición del píxel basándonos en la coordenada calculada
+    // (Usa pixelatedCoord para que el dithering se adapte al tamaño del píxel retro)
+    int px = int(pixelatedCoord.x * screenResolution.x);
+    int py = int(pixelatedCoord.y * screenResolution.y);
     
     // Operación módulo asegurada con enteros positivos
     int x = px % 4;
     int y = py % 4;
     
-    // 4. Obtener el valor de dispersión de la matriz
+    // 3. Obtener el valor de dispersión de la matriz
     float threshold = bayerMatrix[y * 4 + x];
     
-    // 5. Aplicar el dithering a los canales RGB
-    vec3 ditheredColor = originalColor.rgb + (vec3(threshold) - 0.5) * (1.0 / COLOR_LEVELS);
+    // 4. Aplicar el dithering usando tus nuevos uniforms personalizados
+    vec3 ditheredColor = originalColor.rgb + (vec3(threshold) - 0.5) * (u_dither_intensity / levels);
     
     // Evitamos valores negativos antes del floor clamping para que no colapse a negro puro
     ditheredColor = clamp(ditheredColor, 0.0, 1.0);
     
-    // 6. Cuantización (Reducción de la paleta)
-    ditheredColor = floor(ditheredColor * COLOR_LEVELS) / COLOR_LEVELS;
+    // 5. Cuantización usando el uniform u_color_levels
+    ditheredColor = floor(ditheredColor * levels) / levels;
     
-    // Retornar color final convertido a formato BGRA (Inversión de canales R y B)
+    // Retornar color final convertido a formato BGRA exactamente como lo tenías tú
     f_color = vec4(ditheredColor.b, ditheredColor.g, ditheredColor.r, originalColor.a);
 }

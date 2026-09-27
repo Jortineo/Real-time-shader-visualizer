@@ -53,7 +53,7 @@ def main():
     win_nativa.aplicar_frente(True)
     
 
-    render = Renderizador(ruta_shader, ancho, alto)
+    render = Renderizador(ruta_shader, ancho, alto, factor_escala=2)
 
     reloj = pygame.time.Clock()
     ejecutando = True
@@ -130,8 +130,8 @@ def main():
 
             ultimo_informe = ahora
             
-        reloj.tick(FPS)
-        time.sleep(0.001) #Para asegurarme de esperar
+        #reloj.tick(FPS)
+        #time.sleep(0.001) #Para asegurarme de esperar
 
     try:
         camera.stop()
