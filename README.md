@@ -10,6 +10,10 @@ A añadir en el futuro:
 - La posibilidad de editar los shaders en la interfaz y verlos en tiempo real sobre una imagen.
 
 Actualizaciones:
+  27/09/26:
+    - Ahora el shader pasa por 2 draw passes, el segundo se encarga de downsamplearlo para mejorar el rendimiento.
+    - Vuelta a usar el sistema síncrono de dxcam para mejor rendimiento de la cpu.
+    - Añadido un FSR para mejorar la calidad del reescalado. Necesita más trabajo y mejor implementación.
 
   versión 0.1(Lanzamiento):
     - Resuelto un problema que gastaba mucha CPU para cambiar el color de la pantalla de BGRA a RGBA. Ahora simplemente no ocurre ese cambio. BGRA es el formato nativo de Dxcam.
