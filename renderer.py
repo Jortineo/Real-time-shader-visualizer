@@ -191,7 +191,7 @@ class Renderizador:
 
     # ------------------------------------------------------------------
 
-    def renderizar(self, captura, tiempo):
+    def renderizar(self, captura, tiempo, fbo_destino = None):
         if self.prog is None:
             return
 
@@ -216,7 +216,8 @@ class Renderizador:
         self.vao.render()
 
         # --- Pasada 2: estiramos el resultado a toda la ventana ---
-        self.ctx.screen.use()
+        destino = fbo_destino if fbo_destino is not None else self.ctx.screen
+        destino.use()
         self.ctx.clear()
         self.textura_baja.use(0)
         self.prog_upscale["u_baja_res"] = 0

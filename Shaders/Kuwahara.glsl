@@ -8,9 +8,9 @@ out vec4 f_color;
 uniform sampler2D u_screen_texture;
 
 // Parámetros del filtro Kuwahara
-const int RADIUS = 5;          
-const float Q_PARAMETER = 8.0; 
-const float HARDNESS = 1.0;    
+uniform int RADIUS = 5;           // min=1.0 max=10.0 default=5.0
+uniform float Q_PARAMETER = 8.0;  // min=1.0 max=15.0 default=8.0
+uniform float HARDNESS = 1.0;     // min=0.0 max=2.0 default=1.0
 
 float getLuminance(vec3 color) {
     return dot(color, vec3(0.299, 0.587, 0.114));
@@ -88,5 +88,5 @@ void main() {
     }
 
     // Retornar color final derecho y estilizado
-    f_color = vec4(finalColor.rgb / sumWeights, 1.0);
+    f_color = vec4(finalColor.bgr / sumWeights, 1.0);
 }

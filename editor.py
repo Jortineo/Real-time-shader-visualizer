@@ -5,10 +5,13 @@ from PySide6.QtCore import Qt
 import sys
 import subprocess
 import os
+import socket
 
 import config
 
 from pathlib import Path
+
+from vista_previa import VistaPrevia
 
 aplicacion = QApplication()
 
@@ -20,10 +23,16 @@ class Ventana_base(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.sock_uniforms = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Para el socket de los valores en tiempo real
+
+        self.RESOLUCION_FLOAT = 1000 #Para el slider, simula decimales
+
         self.mostrarCualidades = False
 
         self.setMinimumWidth(anchoMinimo)
         self.setMinimumHeight(altoMinimo)
+
+        self.shaderActual : str = config.ruta_shader
 
         self.proceso_shader = None
 
@@ -48,6 +57,9 @@ class Ventana_base(QMainWindow):
 
         self.labelCentral = QLabel("Escuchimizar")
 
+        self.vistaPrevia = VistaPrevia(config.ruta_shader, config.ruta_foto)
+        self.vistaPrevia.setMinimumSize(320, 180)
+
         self.listaShaders = QListWidget()
         self.listaShaders.addItems(self.buscar_shaders())
         layoutDch.addWidget(self.listaShaders)
@@ -59,6 +71,7 @@ class Ventana_base(QMainWindow):
 
         layoutHoriz.addLayout(layoutIzq)
         layoutHoriz.addWidget(self.labelCentral)
+        layoutHoriz.addWidget(self.vistaPrevia)
         layoutHoriz.addLayout(self.layoutCualidades)
         layoutHoriz.addLayout(layoutDch)
         contenedor = QWidget()
@@ -77,22 +90,40 @@ class Ventana_base(QMainWindow):
         return shaders
 
     def analizar_shader(self, ruta_shader:str):
-        self.listaUniforms = []
+        IGNORADOS = {"u_screen_texture", "u_resolution", "u_time"}
+        listaUniforms = []
 
         with open(ruta_shader, "r", encoding='utf-8') as archivo:
             for linea in archivo:
                 linea_limpia = linea.strip()
 
-                if linea_limpia.startswith("uniform") and linea_limpia != "uniform sampler2D u_screen_texture;":
-                    linea_sin_punto_y_coma = linea_limpia.replace(";", "")
+                if not linea_limpia.startswith("uniform"): #Solo si es uniform
+                    continue
 
-                    partes = linea_sin_punto_y_coma.split()
+                codigo, _, comentario = linea_limpia.partition("//") #A partir dl comentario lo que ponga
+                partes = codigo.replace(";", "").split() #Lo separo y le quito el ;
 
-                    nombreUniform = partes[2]
+                if len(partes) < 3: #solo si hay más de 3 cosas
+                    continue
 
-                    self.listaUniforms.append(nombreUniform)
+                tipo, nombre = partes[1], partes[2]
+                if nombre in IGNORADOS: #solo si no es un ignoardo
+                    continue
+
+                info = {"nombre" : nombre, "tipo" : tipo, "min": 0.0, "max": 1.0, "default": 0.0} #meto valores por si no los hay basicos
+                for token in comentario.split(): #Pillo los que puse si los hay
+                    clave, _, valor = token.partition("=")
+                    if clave in ("min", "max", "default"):
+                        info[clave] = float(valor)
+
+                if tipo == "int": #Lo convierto todo en ints claramente
+                    info["min"], info["max"], info["default"] = (
+                    int(info["min"]), int(info["max"]), int(info["default"])
+                )
+
+                listaUniforms.append(info) #y por fin lo meto todo
         
-        return self.listaUniforms
+        return listaUniforms
 
     def ejecutar_shader(self):
         shaderActual = self.listaShaders.currentItem()
@@ -118,6 +149,10 @@ class Ventana_base(QMainWindow):
         evento.accept()
 
     def itemListaClicao(self, item):
+        self.shaderActual = item.text()
+        print(self.shaderActual)
+        self.vistaPrevia.cambiar_shader(self.shaderActual)
+
         if self.mostrarCualidades == True:
             while self.layoutCualidades.count():
                 hijo = self.layoutCualidades.takeAt(0)
@@ -126,19 +161,38 @@ class Ventana_base(QMainWindow):
 
         self.mostrarCualidades = True
 
-        lista = self.analizar_shader(item.text())
-
-        for uniform in lista:
-            etiqueta = QLabel(uniform)
-
+        for info in self.analizar_shader(item.text()):
+            etiqueta = QLabel(info["nombre"])
             slider = QSlider(Qt.Horizontal)
-            slider.setObjectName(uniform)
+
+            if info["tipo"] == "int":
+                slider.setMinimum(info["min"])
+                slider.setMaximum(info["max"])
+                slider.setValue(info["default"])
+            else: # si es float basicamente
+                slider.setMinimum(0)
+                slider.setMaximum(self.RESOLUCION_FLOAT)
+                proporcion = (info["default"] - info["min"]) / (info["max"] - info["min"]) #lo divido entre 1000 pq todos los sliders van por ints
+                slider.setValue(round(proporcion * self.RESOLUCION_FLOAT)) #                así es como si fuera por decimales
+
+            slider.valueChanged.connect(lambda valor, info=info: self.slider_cambiado(info, valor))
 
             self.layoutCualidades.addWidget(etiqueta)
             self.layoutCualidades.addWidget(slider)
-            print(f"añadido {slider.objectName()}")
+            self.slider_cambiado(info, slider.value()) #aplica el default
 
-        
+    def slider_cambiado(self, info, valor_slider):
+        if info["tipo"] == "int":
+            valor_real = valor_slider
+        else:
+            proporcion = valor_slider / self.RESOLUCION_FLOAT
+            valor_real = info["min"] + proporcion * (info["max"] - info["min"])
+
+        self.vistaPrevia.establecer_uniform(info["nombre"], valor_real)
+
+        mensaje = f"{info['nombre']}:{info['tipo']}:{valor_real}"
+        self.sock_uniforms.sendto(mensaje.encode("utf-8"), ("127.0.0.1", config.PUERTO_UNIFORMS)) # Lo mando al socket
+
 
 
 

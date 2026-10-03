@@ -8,9 +8,9 @@ out vec4 f_color;
 uniform sampler2D u_screen_texture;
 
 // --- [NUEVO] UNIFORMS PARA PERSONALIZAR EL EFECTO ---
-uniform float u_color_levels = 4.0;     // Controla los tonos por canal (Reemplaza a COLOR_LEVELS, ej: 4.0)
-uniform float u_pixel_size = 1.0;       // Controla la pixelación / tamaño del grano retro (por defecto 1.0)
-uniform float u_dither_intensity = 1.0; // Fuerza del granulado de la matriz Bayer (de 0.0 a 1.0)
+uniform float u_color_levels = 4.0;     // min=1.0 max=15.0 default=4.0
+uniform float u_pixel_size = 1.0;       // min=1.0 max=20.0 default=1.0
+uniform float u_dither_intensity = 1.0; // min=0.0 max=1.0 default=1.0
 
 // Sintaxis explícita float[16] que ya te funcionaba perfectamente
 const float bayerMatrix[16] = float[16](

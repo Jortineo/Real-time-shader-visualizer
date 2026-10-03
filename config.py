@@ -3,9 +3,14 @@ import os
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
- 
+
+CARPETA_FOTOS = os.path.join(BASE_DIR, "Imágenes")
+ruta_foto = os.path.join(CARPETA_FOTOS, "Calle.jpg")
+
 CARPETA_SHADERS = os.path.join(BASE_DIR, "Shaders")
-ruta_shader = os.path.join(CARPETA_SHADERS, "Kuwahara.glsl")
+ruta_shader = os.path.join(CARPETA_SHADERS, "Dithering.glsl")
+
+PUERTO_UNIFORMS = 50123
  
 FPS = 60
  

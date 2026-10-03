@@ -10,9 +10,10 @@ import pygame
 import dxcam
 import time
 import numpy as np
+import socket
 
 import sys
-from config import ruta_shader as ruta_shader_por_defecto, FPS
+from config import ruta_shader as ruta_shader_por_defecto, FPS, PUERTO_UNIFORMS
 
 ruta_shader = sys.argv[1] if len(sys.argv) > 1 else ruta_shader_por_defecto
 
@@ -26,7 +27,8 @@ def main():
     camera = dxcam.create(
     output_idx=0,
     output_color="BGRA",
-    processor_backend="numpy",   # <- esto evita depender de cv2
+    processor_backend="numpy",
+    max_buffer_len=2,
     )
 
     camera.start(
@@ -51,7 +53,11 @@ def main():
 
     pygame.display.set_window_position((0, 0))
     win_nativa.aplicar_frente(True)
-    
+
+    sock_uniforms = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Creo el socket para mandar los uniforms
+    sock_uniforms.bind(("127.0.0.1", PUERTO_UNIFORMS))
+    print(f"Escuchando uniforms en el puerto {PUERTO_UNIFORMS}")
+    sock_uniforms.setblocking(False) #asi no espera a que lo haya siempre
 
     render = Renderizador(ruta_shader, ancho, alto, factor_escala=2)
 
@@ -96,6 +102,19 @@ def main():
             captura = np.zeros((alto, ancho, 4), dtype=np.uint8)
 
         fin_captura = time.perf_counter()
+
+        while True: #While para coger los datos
+            try:
+                datos, _ = sock_uniforms.recvfrom(1024) #Cojo el socket
+            except BlockingIOError:
+                break
+
+            nombre, tipo, valor_texto = datos.decode("utf-8").split(":") #Cojo los valores
+            valor = int(valor_texto) if tipo == "int" else float(valor_texto)
+            print(f"Recibido: {nombre} = {valor} | ¿está en el programa? {nombre in render.prog}")
+
+            if nombre in render.prog: #nombre
+                render.prog[nombre] = valor
 
         inicio_render = time.perf_counter()
         render.renderizar(

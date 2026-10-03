@@ -2,14 +2,18 @@ Un visualizador de shaders en tiempo real para ponerle filtros a la pantalla.
 
 Utiliza Dxcam para capturar la pantalla mediante la CPU, y la envía con Ctypes a un código que utiliza ModernGl para aplicarle el shader seleccionado. Además cuenta con una GUI hecha con PySide6.
 
-Cuenta con una carpeta de shaders por defecto con varios efectos. Nota: Los shaders utilizan los colores BGRA.
+Cuenta con una carpeta de shaders por defecto con varios efectos.
 
 A añadir en el futuro:
 - Pestaña de postprocesado con módulos para seleccionar diferentes efectos (Corrección de color, filtrado anisotrópico...) [Hacer que los efectos seleccionados se ejecuten de arriba a abajo para poder controlarlo al máximo]
 - Optimizar el rendimiento lo máximo posible.
-- La posibilidad de editar los shaders en la interfaz y verlos en tiempo real sobre una imagen.
+- La posibilidad de editar los shaders en la interfaz y verlos en tiempo real sobre una imagen. [Hecho]
 
 Actualizaciones:
+  03/10/26:
+    - Añadida una vista previa con una imagen en al que se pone el efecto del shader seleccionado
+    - Los sliders ya funcionan, tanto en la vista previa como en el efecto final (Nota: para que se actualize el efecto final, por ahora hay que modificarl los sldiers una vez ya esté siendo ejecutado, no antes)
+
   27/09/26:
     - Ahora el shader pasa por 2 draw passes, el segundo se encarga de downsamplearlo para mejorar el rendimiento.
     - Vuelta a usar el sistema síncrono de dxcam para mejor rendimiento de la cpu.
@@ -19,5 +23,10 @@ Actualizaciones:
     - Resuelto un problema que gastaba mucha CPU para cambiar el color de la pantalla de BGRA a RGBA. Ahora simplemente no ocurre ese cambio. BGRA es el formato nativo de Dxcam.
     - Mejorado el rendimiento de la CPU al usar Dxcam en lugar de Mss como hacía previamente.
     - Creada la GUI
+
+Notas sobre los shaders:
+ - Todos deben utilizar el formato de color nativo de dxcam: BGRA
+ - Todos deben declarar explícitamente como comentario los valores mínimos, máximos, y por defecto del shader, Ejemplo: // min=1.0 max=2.0 default=1.5
+ - Las variables de u_screen_texture, u_time y similares se saltan automáticamente.
 
 Licencia: Este proyecto se publica de forma abierta para su visualización y aprendizaje como un proyecto personal. Actualmente no cuenta con una licencia de uso libre, por lo que todos los derechos están reservados. No está permitida la copia, redistribución ni explotación comercial del código sin mi autorización. Si el proyecto crece, ¡se evaluará abrirlo a la comunidad bajo una licencia formal!
