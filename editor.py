@@ -1,6 +1,7 @@
 #UI
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QSlider, QHBoxLayout, QWidget, QVBoxLayout, QListWidget, QMenu, QLabel, QListWidgetItem
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QSlider, QHBoxLayout, QWidget, QVBoxLayout, QListWidget, QMenu, QLabel, QListWidgetItem, QLayout
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QImageReader
 
 import sys
 import subprocess
@@ -23,6 +24,30 @@ class Ventana_base(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # Estilo ----- Colores(+ a -oscuro):  #030303, #121212, #353535, #545454, #737373, #959595, #b9b9b9, #dedede
+        self.setStyleSheet(""" 
+        * {font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px; letter-spacing: -1px;}
+
+        QMainWindow { background-color: #121212; }
+
+        QPushButton { background-color: #353535; color: #dedede; border-radius: 5px; padding: 5px; }
+        QPushButton:hover { background-color: #737373; color: #dedede; }
+        QPushButton:pressed { background-color: #959595}
+
+        QListWidget { background-color: #121212; color: #dedede; border: 1px solid #333; border-radius: 8px; outline: none }
+        QListWidget::item {padding: 4px 12px}
+        QListWidget::item:hover { background-color: #353535; border-radius: 8px; }
+        QListWidget::item:selected {background-color: #737373; color: #dedede; border-radius: 8px; border-left: 3px solid #dedede;}
+
+        QSlider::groove:horizontal { height: 5px; background-color: #545454; border-radius: 2px; margin: 0px 4 px;}
+        QSlider::handle:horizontal { background-color: #dedede; border: 3px solid #545454; height: 10px; width: 12px; margin: -4px 0px; border-radius: 6px;}
+        QSlider::sub-page:horizontal { background-color: #dedede; border-radius: 2px}
+
+        QMenuBar {background-color: #121212; margin: 0px 4px;}
+        QMenuBar::item:hover {background-color: #545454; border-radius: 12px;}
+        QMenuBar::item:selected {background-color: #737373; border-radius: 12px;}
+        """)
+
         self.sock_uniforms = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Para el socket de los valores en tiempo real
 
         self.RESOLUCION_FLOAT = 1000 #Para el slider, simula decimales
@@ -39,15 +64,28 @@ class Ventana_base(QMainWindow):
         self.setWindowTitle("Visualizador de shaders")
 
         # ------- LAYOUT Y MENÚ -------
-
         layoutHoriz = QHBoxLayout()
+
+        # Layout de la lsita de shaders
+        panelDch = QWidget()
         layoutDch = QVBoxLayout()
-        self.layoutCualidades = QVBoxLayout()
+        panelDch.setLayout(layoutDch)
+        panelDch.setMinimumWidth(300) # tamaño
+        panelDch.setMaximumWidth(600)
+
         layoutIzq = QVBoxLayout()
 
         menu = self.menuBar()
         menu_archivos = menu.addMenu("Archivos")
         menu_ayuda = menu.addMenu("Ayuda")
+
+        # Layout de las cualidades
+        self.panelCualidades = QWidget()
+        self.layoutCualidades = QVBoxLayout()
+        self.panelCualidades.setLayout(self.layoutCualidades) #Meto el panel en el hbox y no el layout
+        self.panelCualidades.hide() #Lo escondo
+        self.panelCualidades.setMinimumWidth(300)
+        self.panelCualidades.setMaximumWidth(400)
 
         # ------- BOTONES Y WIDGETS -------
 
@@ -58,22 +96,29 @@ class Ventana_base(QMainWindow):
         self.labelCentral = QLabel("Escuchimizar")
 
         self.vistaPrevia = VistaPrevia(config.ruta_shader, config.ruta_foto)
-        self.vistaPrevia.setMinimumSize(320, 180)
+        sacar_tamaño = lambda r: QImageReader(r).size() #Saco el tamaño de la foto
+        tamaño_maximo = QSize(800, 600) #Fijo un tamaño pa que no ocupe toda la pantalla
+        tamaño_final = sacar_tamaño(config.ruta_foto).boundedTo(tamaño_maximo) #hago esto pa que no se deforme la foto y se ajuste bien
+        self.vistaPrevia.setFixedSize(tamaño_final) #fijo el tamaño al de la foto
+        self.vistaPrevia.setStyleSheet("""
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #121212;
+        """)
 
         self.listaShaders = QListWidget()
         self.listaShaders.addItems(self.buscar_shaders())
         layoutDch.addWidget(self.listaShaders)
         self.listaShaders.itemClicked.connect(self.itemListaClicao)
 
-        self.panelCualidades = QWidget()
-
         # ------- CONTENEDOR Y PREPARAR LAYOUTS -------
 
         layoutHoriz.addLayout(layoutIzq)
         layoutHoriz.addWidget(self.labelCentral)
         layoutHoriz.addWidget(self.vistaPrevia)
-        layoutHoriz.addLayout(self.layoutCualidades)
-        layoutHoriz.addLayout(layoutDch)
+        layoutHoriz.addWidget(self.panelCualidades)
+        layoutHoriz.addWidget(panelDch)
+
         contenedor = QWidget()
         contenedor.setLayout(layoutHoriz)
 
@@ -160,6 +205,7 @@ class Ventana_base(QMainWindow):
                     hijo.widget().deleteLater()
 
         self.mostrarCualidades = True
+        self.panelCualidades.show()
 
         for info in self.analizar_shader(item.text()):
             etiqueta = QLabel(info["nombre"])

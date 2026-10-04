@@ -4,12 +4,12 @@ Utiliza Dxcam para capturar la pantalla mediante la CPU, y la envía con Ctypes 
 
 Cuenta con una carpeta de shaders por defecto con varios efectos.
 
-A añadir en el futuro:
-- Pestaña de postprocesado con módulos para seleccionar diferentes efectos (Corrección de color, filtrado anisotrópico...) [Hacer que los efectos seleccionados se ejecuten de arriba a abajo para poder controlarlo al máximo]
-- Optimizar el rendimiento lo máximo posible.
-- La posibilidad de editar los shaders en la interfaz y verlos en tiempo real sobre una imagen. [Hecho]
-
 Actualizaciones:
+  04/10/26:
+    - Mejorada la UI añadiendo una styleSheet con PySide6. Cambiados los colores y la fuente del proyecto.
+    - Ahora el tamaño del widget de la foto central se ajusta a la foto sin deformarla.
+    - Ahora los widgets como la lista de shaders y la de las cualidades de los shaders tienen un tamaño máximo.
+
   03/10/26:
     - Añadida una vista previa con una imagen en al que se pone el efecto del shader seleccionado
     - Los sliders ya funcionan, tanto en la vista previa como en el efecto final (Nota: para que se actualize el efecto final, por ahora hay que modificarl los sldiers una vez ya esté siendo ejecutado, no antes)
