@@ -1,6 +1,6 @@
 #UI
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QSlider, QHBoxLayout, QWidget, QVBoxLayout, QListWidget, QMenu, QLabel, QListWidgetItem, QLayout
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QPropertyAnimation
 from PySide6.QtGui import QImageReader
 
 import sys
@@ -93,7 +93,9 @@ class Ventana_base(QMainWindow):
         self.botonEjecutar.clicked.connect(self.ejecutar_shader)
         layoutIzq.addWidget(self.botonEjecutar)
 
-        self.labelCentral = QLabel("Escuchimizar")
+        self.botonDetener = QPushButton("Detener")
+        self.botonDetener.clicked.connect(self.parar_shader)
+        layoutIzq.addWidget(self.botonDetener)
 
         self.vistaPrevia = VistaPrevia(config.ruta_shader, config.ruta_foto)
         sacar_tamaño = lambda r: QImageReader(r).size() #Saco el tamaño de la foto
@@ -114,7 +116,6 @@ class Ventana_base(QMainWindow):
         # ------- CONTENEDOR Y PREPARAR LAYOUTS -------
 
         layoutHoriz.addLayout(layoutIzq)
-        layoutHoriz.addWidget(self.labelCentral)
         layoutHoriz.addWidget(self.vistaPrevia)
         layoutHoriz.addWidget(self.panelCualidades)
         layoutHoriz.addWidget(panelDch)
@@ -183,15 +184,19 @@ class Ventana_base(QMainWindow):
         ruta_base = os.path.dirname(os.path.abspath(config.__file__))
         ruta_main_real = os.path.join(ruta_base, "main.py")
 
-        if self.proceso_shader is not None and self.proceso_shader.poll() is None:
-            self.proceso_shader.terminate()   # mata el anterior si seguía vivo
+        self.parar_shader()
 
         self.proceso_shader = subprocess.Popen([sys.executable, ruta_main_real, ruta_glsl])
 
-    def closeEvent(self, evento):
+    def closeEvent(self, evento): #cerrar el procesado
+        self.parar_shader()
+        evento.accept()
+
+    def parar_shader(self):
         if self.proceso_shader is not None and self.proceso_shader.poll() is None:
             self.proceso_shader.terminate()
-        evento.accept()
+            self.proceso_shader = None
+            print("Shader parao")
 
     def itemListaClicao(self, item):
         self.shaderActual = item.text()
@@ -238,6 +243,8 @@ class Ventana_base(QMainWindow):
 
         mensaje = f"{info['nombre']}:{info['tipo']}:{valor_real}"
         self.sock_uniforms.sendto(mensaje.encode("utf-8"), ("127.0.0.1", config.PUERTO_UNIFORMS)) # Lo mando al socket
+
+    # Animaciones
 
 
 

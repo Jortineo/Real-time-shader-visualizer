@@ -10,6 +10,9 @@ ruta_foto = os.path.join(CARPETA_FOTOS, "Calle.jpg")
 CARPETA_SHADERS = os.path.join(BASE_DIR, "Shaders")
 ruta_shader = os.path.join(CARPETA_SHADERS, "Dithering.glsl")
 
+CARPETA_VERTEX = os.path.join(BASE_DIR, "Vertex shaders")
+ruta_FSR = os.path.join(CARPETA_VERTEX, "FSR.glsl")
+
 PUERTO_UNIFORMS = 50123
  
 FPS = 60

@@ -1,6 +1,6 @@
 #version 330 core
 
-// La textura que contiene los píxeles de lo que hay detrás de la ventana
+// La textura de la pantalla
 uniform sampler2D u_screen_texture; 
 
 // Coordenadas UV interpoladas desde el Vertex Shader (de 0.0 a 1.0)
