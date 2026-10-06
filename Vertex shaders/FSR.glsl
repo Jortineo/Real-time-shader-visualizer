@@ -1,4 +1,3 @@
-"""
 #version 330
 uniform sampler2D u_baja_res; // Tu textura de origen (baja resolución)
 in vec2 v_texcoord;
@@ -104,4 +103,3 @@ void main() {
     vec3 final_rgb = accumColor / max(accumWeight, 0.0001);
     f_color = vec4(final_rgb, 1.0);
 }
-"""

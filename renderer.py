@@ -1,6 +1,7 @@
 import array
 import numpy as np
 import moderngl
+import config
 
 VERTEX_SHADER = """
 #version 330
@@ -13,121 +14,28 @@ void main() {
 }
 """
 
-PASSTHROUGH_FRAGMENT = """
-#version 330
-uniform sampler2D u_baja_res; // Tu textura de origen (baja resolución)
-in vec2 v_texcoord;
-out vec4 f_color;
-
-// Función matemática de AMD FSR para ponderar la luminancia
-float FsrLuma(vec3 rgb) {
-    return rgb.g * 0.5 + (rgb.r + rgb.b) * 0.25;
-}
-
-// Núcleo de interpolación adaptativo oficial de AMD FSR (Aproximación Lanczos2)
-void FsrEasuTap(
-    inout vec3 accumColor, 
-    inout float accumWeight, 
-    vec2 pos, vec2 off, 
-    vec2 dir, vec2 stretch, 
-    float lob, float clp, vec2 texel
-) {
-    // Proyectar el offset en la dirección del gradiente del borde
-    vec2 v = vec2(dot(off, dir), dot(off, vec2(-dir.y, dir.x))) * stretch;
-    float d2 = dot(v, v);
-    
-    if (d2 < clp) {
-        // Forzamos un muestreo limpio simulando Nearest en coordenadas continuas
-        vec2 sampleUV = (pos + off) * texel;
-        vec3 rgb = texture(u_baja_res, sampleUV).rgb;
-        
-        // Ventana matemática polinómica de FSR para evitar artefactos (ringing)
-        float wX = d2 * lob + 1.0;
-        float wY = d2 * 2.0 + 1.0;
-        float w = (wX * wX) * wY;
-        w = max(0.0, w);
-        
-        accumColor += rgb * w;
-        accumWeight += w;
-    }
-}
-
-void main() {
-    // 1. Obtener la resolución del búfer de baja resolución automáticamente
-    vec2 tex_size = vec2(textureSize(u_baja_res, 0));
-    vec2 texel = 1.0 / tex_size;
-
-    // 2. Encontrar la celda del píxel físico exacto en el espacio de origen
-    vec2 pp = v_texcoord * tex_size - vec2(0.5);
-    vec2 fp = floor(pp);
-    vec2 pos = fp + vec2(0.5);
-
-    // 3. Muestrear el vecindario nativo de 12 puntos requerido por EASU
-    vec3 cA = texture(u_baja_res, (pos + vec2(-1.0, -1.0)) * texel).rgb;
-    vec3 cB = texture(u_baja_res, (pos + vec2( 0.0, -1.0)) * texel).rgb;
-    vec3 cC = texture(u_baja_res, (pos + vec2( 1.0, -1.0)) * texel).rgb;
-    vec3 cD = texture(u_baja_res, (pos + vec2(-1.0,  0.0)) * texel).rgb;
-    vec3 cE = texture(u_baja_res, (pos + vec2( 0.0,  0.0)) * texel).rgb;
-    vec3 cF = texture(u_baja_res, (pos + vec2( 1.0,  0.0)) * texel).rgb;
-    vec3 cG = texture(u_baja_res, (pos + vec2(-1.0,  1.0)) * texel).rgb;
-    vec3 cH = texture(u_baja_res, (pos + vec2( 0.0,  1.0)) * texel).rgb;
-    vec3 cI = texture(u_baja_res, (pos + vec2( 1.0,  1.0)) * texel).rgb;
-    vec3 cJ = texture(u_baja_res, (pos + vec2( 0.0,  2.0)) * texel).rgb;
-    vec3 cK = texture(u_baja_res, (pos + vec2(-1.0,  2.0)) * texel).rgb;
-    vec3 cL = texture(u_baja_res, (pos + vec2( 1.0,  2.0)) * texel).rgb;
-
-    // 4. Convertir muestras a luminancia para procesar gradientes
-    float lA = FsrLuma(cA); float lB = FsrLuma(cB); float lC = FsrLuma(cC);
-    float lD = FsrLuma(cD); float lE = FsrLuma(cE); float lF = FsrLuma(cF);
-    float lG = FsrLuma(cG); float lH = FsrLuma(cH); float lI = FsrLuma(cI);
-    float lJ = FsrLuma(cJ); float lK = FsrLuma(cK); float lL = FsrLuma(cL);
-
-    // 5. Detectar la dirección del borde (Lógica de filtrado adaptativo AMD)
-    float dc = lB - lE; float de = lD - lE; float df = lF - lE; float dh = lH - lE;
-    vec2 dir = vec2(de + df, dc + dh);
-    
-    float dAC = lA - lE; float dCC = lC - lE; float dGC = lG - lE; float dIC = lI - lE;
-    dir.x += (dAC + dCC + dGC + dIC) * 0.5;
-    dir.y += (dAC - dCC - dGC + dIC) * 0.5;
-
-    float len = length(dir);
-    if (len > 0.0) {
-        dir /= len;
-    }
-
-    // Calcular estiramiento y suavizado de ventana
-    float edgeIntensity = clamp(len, 0.0, 1.0);
-    vec2 stretch = vec2(1.0 + edgeIntensity, 1.0 - edgeIntensity * 0.5);
-    float lob = 0.5 - 0.25 * edgeIntensity;
-    float clp = 1.0 / (1.0 + lob);
-
-    // 6. Acumular los 9 Taps espaciales aplicando el peso adaptativo FSR
-    vec3 accumColor = vec3(0.0);
-    float accumWeight = 0.0;
-
-    FsrEasuTap(accumColor, accumWeight, pos, vec2(-1.0, -1.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2( 0.0, -1.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2( 1.0, -1.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2(-1.0,  0.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2( 0.0,  0.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2( 1.0,  0.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2(-1.0,  1.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2( 0.0,  1.0), dir, stretch, lob, clp, texel);
-    FsrEasuTap(accumColor, accumWeight, pos, vec2( 1.0,  1.0), dir, stretch, lob, clp, texel);
-
-    // 7. Salida con interpolación suavizada e inteligente de bordes
-    vec3 final_rgb = accumColor / max(accumWeight, 0.0001);
-    f_color = vec4(final_rgb, 1.0);
-}
-"""
-
-
-
 VERTICES = [
     -1.0, -1.0,   1.0, -1.0,  -1.0,  1.0,
     -1.0,  1.0,   1.0, -1.0,   1.0,  1.0,
 ]
 
+
+class Pasada:
+    def __init__(self, ctx, vbo, ruta_o_codigo_fragment, vertex_shader_codigo=VERTEX_SHADER, es_ruta=True):
+        codigo = open(ruta_o_codigo_fragment).read() if es_ruta else ruta_o_codigo_fragment
+        self.prog = ctx.program(vertex_shader=vertex_shader_codigo, fragment_shader=codigo)
+        self.vao = ctx.vertex_array(self.prog, [(vbo, '2f', 'in_vert')])
+
+    def ejecutar(self, destino, **uniforms):
+        for nombre, valor in uniforms.items():
+            if nombre in self.prog:
+                self.prog[nombre] = valor
+        destino.use()
+        self.vao.render()
+
+    def liberar(self):
+        self.prog.release()
+        self.vao.release()
 
 class Renderizador:
     def __init__(self, ruta_fragment_shader, ancho, alto, factor_escala=1):
@@ -142,83 +50,94 @@ class Renderizador:
 
         self.vbo = self.ctx.buffer(array.array('f', VERTICES))
 
-        # Programa principal: tu shader real, corre a baja resolución
-        self.prog = None
-        self.vao = None
-        self.cambiar_shader(ruta_fragment_shader)
+        self.textura_entrada = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4) #esta es la captura de pantalla a baja resolucion, 4 canales
+        self.textura_efecto = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4) #mismo tamaño para el efecto
+        self.fbo_efecto = self.ctx.framebuffer(color_attachments=[self.textura_efecto]) #dimensiones completas
 
-        # Programa de la 2ª pasada: solo estira la imagen ya procesada
-        self.prog_upscale = self.ctx.program(
-            vertex_shader=VERTEX_SHADER,
-            fragment_shader=PASSTHROUGH_FRAGMENT,
+        # fsr
+        self.textura_fsr = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4) #lo mismo pal fsr
+        self.fbo_fsr = self.ctx.framebuffer(color_attachments=[self.textura_fsr])
+        self.pasada_fsr = Pasada(
+            self.ctx,
+            self.vbo,
+            config.ruta_FSR
         )
-        self.vao_upscale = self.ctx.vertex_array(self.prog_upscale, [(self.vbo, '2f', 'in_vert')])
 
-        # Textura de ENTRADA (la captura de pantalla), ya a baja resolución
-        self.textura = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+        self.pasada_salida = Pasada(
+            self.ctx,
+            self.vbo,
+            config.ruta_salida
+        )
 
-        # Textura de SALIDA del shader real, con filtrado suave para cuando la estiremos
-        self.textura_baja = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
-        self.textura_baja.filter = (moderngl.LINEAR, moderngl.LINEAR)
-        self.fbo_bajo = self.ctx.framebuffer(color_attachments=[self.textura_baja])
+        self.pasada_efecto = None
+        self.cambiar_shader(ruta_fragment_shader)
 
     # ------------------------------------------------------------------
 
     def cambiar_shader(self, ruta_fragment_shader):
         #Compila or recompila el programa
         try:
-            with open(ruta_fragment_shader, "r") as archivo:
-                codigo = archivo.read()
-            nuevo_prog = self.ctx.program(
-                vertex_shader=VERTEX_SHADER,
-                fragment_shader=codigo,
+            nueva_pasada = Pasada(
+                self.ctx,
+                self.vbo,
+                ruta_fragment_shader
             )
         except Exception as e:
-            print(f"No se pudo cargar el shader '{ruta_fragment_shader}':\n{e}")
+            print(f"error cargando el shader broder: {ruta_fragment_shader}: \n{e}")
             return False
 
-        if self.prog is not None:
-            self.prog.release()
-        if self.vao is not None:
-            self.vao.release()
+        if self.pasada_efecto is not None:
+            self.pasada_efecto.liberar()
 
-        self.prog = nuevo_prog
-        self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, '2f', 'in_vert')])
-        return True
-
-    #def _crear_textura(self):
-        #self.textura = self.ctx.texture((self.ancho, self.alto), 4)
-
+        self.pasada_efecto = nueva_pasada
     # ------------------------------------------------------------------
 
     def renderizar(self, captura, tiempo, fbo_destino = None):
-        if self.prog is None:
+        if self.pasada_efecto is None:
             return
 
+        # bajo la resolucion de la captura
+
         factor = self.factor_escala
+
         if factor > 1:
-            captura = captura[::factor, ::factor][:self.alto_bajo, :self.ancho_bajo]
+            captura = captura[::factor, ::factor]
+            captura = captura[:self.alto_bajo, :self.ancho_bajo]
             captura = np.ascontiguousarray(captura)
 
-        if "u_resolution" in self.prog:
-            self.prog["u_resolution"] = (self.ancho_bajo, self.alto_bajo)
-        if "u_time" in self.prog:
-            self.prog["u_time"] = tiempo
+        # guardo la captura en la textura de entrada
+        
+        self.textura_entrada.write(captura) #bastante directo creo yo
 
-        self.textura.write(captura)
-        self.textura.use(0)
-        if "u_screen_texture" in self.prog:
-            self.prog["u_screen_texture"] = 0
+        self.textura_entrada.use(0) # la pongo en el 0
 
-        # --- Pasada 1: tu shader real, dentro del framebuffer pequeño ---
-        self.fbo_bajo.use()
-        self.ctx.clear()
-        self.vao.render()
+        # EJECUTO
 
-        # --- Pasada 2: estiramos el resultado a toda la ventana ---
-        destino = fbo_destino if fbo_destino is not None else self.ctx.screen
-        destino.use()
-        self.ctx.clear()
-        self.textura_baja.use(0)
-        self.prog_upscale["u_baja_res"] = 0
-        self.vao_upscale.render()
+        # Pase 1, efecto
+
+        self.pasada_efecto.ejecutar(
+            self.fbo_efecto,
+            u_screen_texture=0, #uso la 0, es decir, la entrada
+            u_resolution=(self.ancho_bajo, self.alto_bajo), #estos dos se ignoran si no los hay en el shader
+            u_time = tiempo
+        )
+
+        # Pase 2, FSR
+
+        self.textura_efecto.use(0)
+
+        self.pasada_fsr.ejecutar(
+            self.fbo_fsr,
+            u_baja_res=0
+        )
+
+        #Pase 3, salida
+
+        destino = fbo_destino if fbo_destino is not None else self.ctx.screen #saco el destino
+
+        self.textura_fsr.use(0)
+
+        self.pasada_salida.ejecutar(
+            destino,
+            u_screen_texture=0
+        )

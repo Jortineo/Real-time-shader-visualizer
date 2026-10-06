@@ -80,19 +80,6 @@ def main():
                 ejecutando = False
                 continue
 
-            if evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_ESCAPE:
-                    ejecutando = False
-
-                elif evento.key == pygame.K_l:
-                    bloqueada = win_nativa.alternar_bloqueo()
-                    print("Ventana:", "BLOQUEADA al frente" if bloqueada else "Normal")
-
-                elif evento.key == pygame.K_t:
-                    nuevo = not win_nativa.click_through
-                    win_nativa.establecer_click_through(nuevo)
-                    print("Click-through:", "ACTIVADO (ignora el ratón)" if nuevo else "desactivado")
-
         inicio_captura = time.perf_counter()
         frame_completo = camera.get_latest_frame()
 
@@ -111,10 +98,10 @@ def main():
 
             nombre, tipo, valor_texto = datos.decode("utf-8").split(":") #Cojo los valores
             valor = int(valor_texto) if tipo == "int" else float(valor_texto)
-            print(f"Recibido: {nombre} = {valor} | ¿está en el programa? {nombre in render.prog}")
+            print(f"Recibido: {nombre} = {valor} | ¿está en el programa? {nombre in render.pasada_efecto.prog}")
 
-            if nombre in render.prog: #nombre
-                render.prog[nombre] = valor
+            if nombre in render.pasada_efecto.prog: #nombre
+                render.pasada_efecto.prog[nombre] = valor
 
         inicio_render = time.perf_counter()
         render.renderizar(

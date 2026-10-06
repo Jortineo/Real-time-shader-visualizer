@@ -35,8 +35,8 @@ class VistaPrevia(QOpenGLWidget):
             self.ruta_shader_pendiente = None
 
         for nombre, valor in self.valores_pendientes.items(): # Añado el cambio de uniform
-            if nombre in self.render.prog:
-                self.render.prog[nombre] = valor #Necesario pq si cambio de shader ya no sería lo mismo y pasaría algo raro
+            if nombre in self.render.pasada_efecto.prog:
+                self.render.pasada_efecto.prog[nombre] = valor #Necesario pq si cambio de shader ya no sería lo mismo y pasaría algo raro
         self.valores_pendientes.clear() #Lo limpio
 
         if not hasattr(self, "imagen"):
