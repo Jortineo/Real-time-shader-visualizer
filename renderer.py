@@ -2,6 +2,8 @@ import array
 import numpy as np
 import moderngl
 import config
+from PIL import Image
+
 
 VERTEX_SHADER = """
 #version 330
@@ -38,13 +40,18 @@ class Pasada:
         self.vao.release()
 
 class Renderizador:
-    def __init__(self, ruta_fragment_shader, ancho, alto, factor_escala=1):
+    def __init__(self, ruta_fragment_shader, ancho, alto, factor_escala=1, editor_ui=None):
         self.ctx = moderngl.create_context()
         self.ancho = ancho
         self.alto = alto
-        self.factor_escala = factor_escala
         self.ancho_bajo = max(1, ancho // factor_escala)
         self.alto_bajo = max(1, alto // factor_escala)
+
+        self.editor = editor_ui
+        if self.editor != None:
+            self.factor_escala = self.editor.factor_escala
+        else:
+            self.factor_escala = 2
 
         self.ctx.viewport = (0, 0, ancho, alto)
 
@@ -61,6 +68,14 @@ class Renderizador:
             self.ctx,
             self.vbo,
             config.ruta_FSR
+        )
+
+        self.textura_anti_alias = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+        self.fbo_anti_alias = self.ctx.framebuffer(color_attachments=[self.textura_anti_alias])
+        self.pasada_anti_alias = Pasada(
+            self.ctx,
+            self.vbo,
+            config.ruta_anti_alias
         )
 
         self.pasada_salida = Pasada(
@@ -96,13 +111,37 @@ class Renderizador:
         if self.pasada_efecto is None:
             return
 
+        #Actualizo TODO
+        if self.editor is not None and self.factor_escala != self.editor.factor_escala:
+            self.factor_escala = self.editor.factor_escala
+            self.ancho_bajo = max(1, int(self.ancho // self.factor_escala))
+            self.alto_bajo = max(1, int(self.alto // self.factor_escala))
+            
+            # Recreamos dinámicamente las texturas que cambian de tamaño en la GPU
+            self.textura_entrada.release()
+            self.textura_efecto.release()
+            self.textura_fsr.release()
+            self.textura_anti_alias.release()
+            
+            self.textura_entrada = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+            self.textura_efecto = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+            self.textura_fsr = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+            self.textura_anti_alias = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+            
+            self.fbo_efecto = self.ctx.framebuffer(color_attachments=[self.textura_efecto])
+            self.fbo_fsr = self.ctx.framebuffer(color_attachments=[self.textura_fsr])
+            self.fbo_anti_alias = self.ctx.framebuffer(color_attachments=[self.textura_anti_alias])
         # bajo la resolucion de la captura
 
         factor = self.factor_escala
 
         if factor > 1:
-            captura = captura[::factor, ::factor]
-            captura = captura[:self.alto_bajo, :self.ancho_bajo]
+            img_temporal = Image.fromarray(captura)
+            img_temporal = img_temporal.resize(
+                (self.ancho_bajo, self.alto_bajo), 
+                resample=Image.Resampling.BILINEAR
+            )
+            captura = np.array(img_temporal)
             captura = np.ascontiguousarray(captura)
 
         # guardo la captura en la textura de entrada
@@ -131,11 +170,21 @@ class Renderizador:
             u_baja_res=0
         )
 
-        #Pase 3, salida
+        # Pase 3, AA
+
+        self.textura_fsr.use(0)
+
+        self.pasada_anti_alias.ejecutar(
+            self.fbo_anti_alias,
+            u_resolution=(self.ancho_bajo, self.alto_bajo),
+            u_screen_texture=0
+        )
+
+        #Pase 4, salida
 
         destino = fbo_destino if fbo_destino is not None else self.ctx.screen #saco el destino
 
-        self.textura_fsr.use(0)
+        self.textura_anti_alias.use(0)
 
         self.pasada_salida.ejecutar(
             destino,

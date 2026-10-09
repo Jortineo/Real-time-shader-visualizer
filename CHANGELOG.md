@@ -1,4 +1,7 @@
 Updates
+10/09/26
+• Added a simple Anti-aliasing right after upscaling. (Note: it is made with Ai for now but will be rewritten by me)
+• Added the option to change the resolution ratio in the options menu. (It kind of works but needs a lot of improvement)
 10/06/26
 • Improved the draw pass system and created new folder to store shaders that must be used, like simple vertex shaders and FSR.
 • Translated my GitHub page from Spanish to English.

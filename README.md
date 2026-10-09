@@ -22,4 +22,8 @@ Shader notes:
  - Uniforms must have explicitly declared minimum, maximum and default values through a comment. Example: uniform float my_uniform; // min=1.0 max=2.0 default=1.5
  - Uniforms like u_screen_texture, u_time and similar will be automatically skipped bin the reading process.
 
+Note: The shaders are made with AI for now due to my lack of knowledge in glsl. This is not definitive and they will be rewritten in the future.
+
+AI usage: Used for doubts and learning. No copy pasting was involved outside shaders and I prioritize my learning experience over having AI making stuff for me.
+
 License: This project is openly shared for its visualization and learning as a personal project. Currently, it does not count with a free use license, so all rights are reserved. Code copy, redistribution and commercial exploitation are no allowed. If the project grows, it will be evaluated to release it for free under a formal license.

@@ -1,8 +1,5 @@
 import ctypes
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(2)
-except Exception:
-    ctypes.windll.user32.SetProcessDPIAware()
+
 
 import os
 import sys
@@ -59,7 +56,7 @@ def main():
     print(f"Escuchando uniforms en el puerto {PUERTO_UNIFORMS}")
     sock_uniforms.setblocking(False) #asi no espera a que lo haya siempre
 
-    render = Renderizador(ruta_shader, ancho, alto, factor_escala=2)
+    render = Renderizador(ruta_shader, ancho, alto, factor_escala=2, editor_ui=None)
 
     reloj = pygame.time.Clock()
     ejecutando = True
@@ -100,10 +97,16 @@ def main():
             valor = int(valor_texto) if tipo == "int" else float(valor_texto)
             print(f"Recibido: {nombre} = {valor} | ¿está en el programa? {nombre in render.pasada_efecto.prog}")
 
+            if nombre == "factor_escala": #Paso también el factor
+                render.factor_escala = valor
+                render.ancho_bajo = max(1, int(render.ancho // render.factor_escala))
+                render.alto_bajo = max(1, int(render.alto // render.factor_escala))
+
             if nombre in render.pasada_efecto.prog: #nombre
                 render.pasada_efecto.prog[nombre] = valor
 
         inicio_render = time.perf_counter()
+
         render.renderizar(
             captura,
             pygame.time.get_ticks() / 1000.0
@@ -136,7 +139,7 @@ def main():
 
             ultimo_informe = ahora
             
-        #reloj.tick(FPS)
+        reloj.tick(FPS)
         #time.sleep(0.001) #Para asegurarme de esperar
 
     try:

@@ -13,6 +13,7 @@ ruta_shader = os.path.join(CARPETA_SHADERS, "Dithering.glsl")
 CARPETA_VERTEX = os.path.join(BASE_DIR, "Vertex shaders")
 ruta_FSR = os.path.join(CARPETA_VERTEX, "FSR.glsl")
 ruta_salida = os.path.join(CARPETA_VERTEX, "Salida.glsl")
+ruta_anti_alias = os.path.join(CARPETA_VERTEX, "Anti aliasing.glsl")
 
 PUERTO_UNIFORMS = 50123
  

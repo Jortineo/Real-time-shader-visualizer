@@ -1,7 +1,7 @@
 #UI
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QSlider, QHBoxLayout, QWidget, QVBoxLayout, QListWidget, QMenu, QLabel, QListWidgetItem, QLayout
-from PySide6.QtCore import Qt, QSize, QPropertyAnimation
-from PySide6.QtGui import QImageReader
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QSlider, QHBoxLayout, QWidget, QVBoxLayout, QListWidget, QMenu, QLabel, QListWidgetItem, QLayout, QDoubleSpinBox, QWidgetAction
+from PySide6.QtCore import Qt, QSize, QPropertyAnimation, QEvent
+from PySide6.QtGui import QImageReader, QPainter, QLinearGradient, QColor, QPen
 
 import sys
 import subprocess
@@ -19,31 +19,63 @@ aplicacion = QApplication()
 anchoMinimo = 800
 altoMinimo = 600
 
+class ListaPersonalizada(QListWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.viewport().installEventFilter(self) # pa interceptar el evento de pintar
+
+    def eventFilter(self, objeto, evento):
+        if objeto == self.viewport() and evento.type() == QEvent.Paint:
+            resultado = super().eventFilter(objeto, evento) #se dibuja lo normal
+            
+            # Ahora pintamos de manera segura usando un pintor asociado al viewport
+            painter = QPainter(self.viewport())
+            painter.setRenderHint(QPainter.Antialiasing)
+
+            degradado = QLinearGradient(0, 0, self.width(), self.height())
+            degradado.setColorAt(0.0, QColor("#77ebce"))
+            degradado.setColorAt(1.0, QColor("#d14dea"))
+
+            grosor = 2
+            pen = QPen(degradado, grosor)
+            painter.setPen(pen)
+
+            rectangulo = self.viewport().rect().adjusted(grosor // 2, grosor // 2, -(grosor // 2), -(grosor // 2))
+            painter.drawRect(rectangulo)
+            painter.end()
+            
+            return resultado
+            
+        return super().eventFilter(objeto, evento)
+
 class Ventana_base(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        # Variables de configuración
+        self.factor_escala = 2
 
-        # Estilo ----- Colores(+ a -oscuro):  #030303, #121212, #353535, #545454, #737373, #959595, #b9b9b9, #dedede
+        # Estilo ----- Colores(+ a -oscuro):  #030303, #1c1621, #353535, #545454, #737373, #959595, #b9b9b9, #dedede
         self.setStyleSheet(""" 
         * {font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px; letter-spacing: -1px;}
 
-        QMainWindow { background-color: #121212; }
+        QMainWindow { background-color: #1c1621; }
 
-        QPushButton { background-color: #353535; color: #dedede; border-radius: 5px; padding: 5px; }
-        QPushButton:hover { background-color: #737373; color: #dedede; }
-        QPushButton:pressed { background-color: #959595}
+        QPushButton { background-color: #1c1621; color: #c9c9ca; border-radius: 5px; padding: 5px; }
+        QPushButton:hover { background-color: #1c1621; color: #c9c9ca; border: 1px solid #d5c382 }
+        QPushButton:pressed { background-color: #1c1621; border: 1px solid #77ebce}
 
-        QListWidget { background-color: #121212; color: #dedede; border: 1px solid #333; border-radius: 8px; outline: none }
+        QListWidget { background-color: #1c1621; color: #c9c9ca; border-radius: 8px; outline: none }
         QListWidget::item {padding: 4px 12px}
-        QListWidget::item:hover { background-color: #353535; border-radius: 8px; }
-        QListWidget::item:selected {background-color: #737373; color: #dedede; border-radius: 8px; border-left: 3px solid #dedede;}
+        QListWidget::item:hover { color: #d5c382;}
+        QListWidget::item:selected { color: #77ebce; border-radius: 4px; border-left: 3px solid #d5c382;}
 
         QSlider::groove:horizontal { height: 5px; background-color: #545454; border-radius: 2px; margin: 0px 4 px;}
-        QSlider::handle:horizontal { background-color: #dedede; border: 3px solid #545454; height: 10px; width: 12px; margin: -4px 0px; border-radius: 6px;}
-        QSlider::sub-page:horizontal { background-color: #dedede; border-radius: 2px}
+        QSlider::handle:horizontal { background-color: #c9c9ca; border: 3px solid #545454; height: 10px; width: 12px; margin: -4px 0px; border-radius: 6px;}
+        QSlider::sub-page:horizontal { background-color: #c9c9ca; border-radius: 2px}
 
-        QMenuBar {background-color: #121212; margin: 0px 4px;}
+        QMenuBar {background-color: #1c1621; margin: 0px 4px;}
         QMenuBar::item:hover {background-color: #545454; border-radius: 12px;}
         QMenuBar::item:selected {background-color: #737373; border-radius: 12px;}
         """)
@@ -78,6 +110,7 @@ class Ventana_base(QMainWindow):
         menu = self.menuBar()
         menu_archivos = menu.addMenu("Archivos")
         menu_ayuda = menu.addMenu("Ayuda")
+        menu_opciones = menu.addMenu("Opciones")
 
         # Layout de las cualidades
         self.panelCualidades = QWidget()
@@ -89,6 +122,14 @@ class Ventana_base(QMainWindow):
 
         # ------- BOTONES Y WIDGETS -------
 
+        self.input_factor = QDoubleSpinBox()
+        self.input_factor.setRange(1.0, 4.0)
+        self.input_factor.setValue(self.factor_escala)
+        self.input_factor.valueChanged.connect(self.cambiar_factor_de_escala)
+        accion_input = QWidgetAction(self)
+        accion_input.setDefaultWidget(self.input_factor)
+        menu_opciones.addAction(accion_input)
+
         self.botonEjecutar = QPushButton("Ejecutar")
         self.botonEjecutar.clicked.connect(self.ejecutar_shader)
         layoutIzq.addWidget(self.botonEjecutar)
@@ -97,7 +138,7 @@ class Ventana_base(QMainWindow):
         self.botonDetener.clicked.connect(self.parar_shader)
         layoutIzq.addWidget(self.botonDetener)
 
-        self.vistaPrevia = VistaPrevia(config.ruta_shader, config.ruta_foto)
+        self.vistaPrevia = VistaPrevia(config.ruta_shader, config.ruta_foto, editor=self)
         sacar_tamaño = lambda r: QImageReader(r).size() #Saco el tamaño de la foto
         tamaño_maximo = QSize(800, 600) #Fijo un tamaño pa que no ocupe toda la pantalla
         tamaño_final = sacar_tamaño(config.ruta_foto).boundedTo(tamaño_maximo) #hago esto pa que no se deforme la foto y se ajuste bien
@@ -108,7 +149,7 @@ class Ventana_base(QMainWindow):
             background-color: #121212;
         """)
 
-        self.listaShaders = QListWidget()
+        self.listaShaders = ListaPersonalizada()
         self.listaShaders.addItems(self.buscar_shaders())
         layoutDch.addWidget(self.listaShaders)
         self.listaShaders.itemClicked.connect(self.itemListaClicao)
@@ -244,7 +285,14 @@ class Ventana_base(QMainWindow):
         mensaje = f"{info['nombre']}:{info['tipo']}:{valor_real}"
         self.sock_uniforms.sendto(mensaje.encode("utf-8"), ("127.0.0.1", config.PUERTO_UNIFORMS)) # Lo mando al socket
 
-    # Animaciones
+    def cambiar_factor_de_escala(self, nuevo_valor): #A MEJORAR: SI LO CAMBIAS MIENTRAS EJECUTAS, PETA.
+        self.factor_escala = nuevo_valor
+
+        #Loo mando al socket
+        mensaje = f"factor_escala:float:{self.factor_escala}"
+        self.sock_uniforms.sendto(mensaje.encode("utf-8"), ("127.0.0.1", config.PUERTO_UNIFORMS))
+
+        print(f"nuevo valor de escala: {self.factor_escala}")
 
 
 
