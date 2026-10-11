@@ -5,9 +5,9 @@ A real-time shader visualizer made in python.
 This project renders glsl shaders in real time in the screen. It utilizes Dxcam to capture the screen and pass it to the renderer, which renders the shader using ModernGl. It also counts with a GUI made with PySide6.
 
 Files:
-- main.py: This is where the dxcam and screen-capturing logic lives. It displays a borderless window that fits the whole screen, ignores mouse inputs and is always on top. The window uses pygame for now. It uses the Dxcam camera system to get the texture "behind" the window. main.py is also in charge of handling the uniform data sent from editor.py and actively change the shader's parameters based off of that. This is done by sending data to a socket using the socket library and then listening to it in renderer.py
+- capturer.py: This is where the dxcam and screen-capturing logic lives. It displays a borderless window that fits the whole screen, ignores mouse inputs and is always on top. The window uses pygame for now. It uses the Dxcam camera system to get the texture "behind" the window. main.py is also in charge of handling the uniform data sent from editor.py and actively change the shader's parameters based off of that. This is done by sending data to a socket using the socket library and then listening to it in renderer.py
 
-- editor.py: The GUI and PySide6 logic is here. It handles the front-end side of the project and is the one who sends data such as uniforms values or selected shader over to the other scripts. For instance, it reads the shader folder to display available shaders, and it also uses the socket library to send uniform impormation over to main.py.
+- UI folder: The GUI and PySide6 logic is here. It handles the front-end side of the project and is the one who sends data such as uniforms values or selected shader over to the other scripts. For instance, it reads the shader folder to display available shaders, and it also uses the socket library to send uniform impormation over to main.py.
 
 - renderer.py: Here lies Moderngl. This script contains the logic behind actually displaying the shader, using draw passes to ensure organisation and efficiency. The downscaling logic is also here.
 
