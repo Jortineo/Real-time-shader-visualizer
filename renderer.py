@@ -44,8 +44,11 @@ class Renderizador:
         self.ctx = moderngl.create_context()
         self.ancho = ancho
         self.alto = alto
-        self.ancho_bajo = max(1, ancho // factor_escala)
-        self.alto_bajo = max(1, alto // factor_escala)
+        self.ancho_bajo = max(1, int(ancho / factor_escala))
+        self.alto_bajo = max(1, int(alto / factor_escala))
+
+        self.idx_x = np.minimum((np.arange(self.ancho_bajo) * factor_escala).astype(int), ancho - 1) #Saco los decimales que quiero
+        self.idx_y = np.minimum((np.arange(self.alto_bajo) * factor_escala).astype(int), alto - 1)
 
         self.editor = editor_ui
         if self.editor != None:
@@ -136,13 +139,7 @@ class Renderizador:
         factor = self.factor_escala
 
         if factor > 1:
-            img_temporal = Image.fromarray(captura)
-            img_temporal = img_temporal.resize(
-                (self.ancho_bajo, self.alto_bajo), 
-                resample=Image.Resampling.BILINEAR
-            )
-            captura = np.array(img_temporal)
-            captura = np.ascontiguousarray(captura)
+            captura = captura[np.ix_(self.idx_y, self.idx_x)] #ix_ combina los dos indices
 
         # guardo la captura en la textura de entrada
         
