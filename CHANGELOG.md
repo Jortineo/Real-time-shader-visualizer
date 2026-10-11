@@ -1,4 +1,8 @@
 Updates
+10/11/26
+• Added functionalities to the menu, now you can also change the central photo to another one inside the images folder.
+• Now the front end is in Enlgish
+• Overhauled the Ui architecture. Renamed mani.py to capturer.py and made an actual main.py that executes the app. Now the UI is divided into several files inside the UI folder.
 10/09/26
 • Added a simple Anti-aliasing right after upscaling. (Note: it is made with Ai for now but will be rewritten by me)
 • Added the option to change the resolution ratio in the options menu. (It kind of works but needs a lot of improvement)
