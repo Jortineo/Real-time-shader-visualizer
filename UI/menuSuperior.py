@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QDoubleSpinBox, QWidgetAction, QLabel, QMenu
+from PySide6.QtWidgets import QDoubleSpinBox, QWidgetAction, QLabel, QMenu, QPushButton
 from PySide6.QtGui import QAction
 
-from UI import listas, funciones
+from UI import listas, funciones, rendimiento
 
 
 def ready(ventana):
@@ -9,6 +9,7 @@ def ready(ventana):
     menu_archivos = menu.addMenu("File")
     menu_ayuda = menu.addMenu("Help")
     menu_opciones = menu.addMenu("Options")
+    menu_rendimiento = menu.addMenu("Performance")
 
     # ------- APARTADOS DEL MENU -------
     # factor
@@ -26,6 +27,10 @@ def ready(ventana):
 
     menu_opciones.addAction(acc_label_factor)
     menu_opciones.addAction(acc_input)
+
+    #menu rendimiento
+    acc_boton_rendimiento = menu_rendimiento.addAction("See performance")
+    acc_boton_rendimiento.triggered.connect(funciones.ejecutar_rendimiento)
 
     # cambiar imagen
     ventana.menu_imagenes = QMenu("Change image", ventana)

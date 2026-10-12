@@ -11,6 +11,7 @@ import socket
 
 import sys
 from config import ruta_shader as ruta_shader_por_defecto, FPS, PUERTO_UNIFORMS
+from PySide6.QtCore import QObject, Signal
 
 ruta_shader = sys.argv[1] if len(sys.argv) > 1 else ruta_shader_por_defecto
 
@@ -55,6 +56,8 @@ def main():
     sock_uniforms.bind(("127.0.0.1", PUERTO_UNIFORMS))
     print(f"Escuchando uniforms en el puerto {PUERTO_UNIFORMS}")
     sock_uniforms.setblocking(False) #asi no espera a que lo haya siempre
+
+    sock_rendimiento = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Socket pa madnar los datos de rendimiento
 
     render = Renderizador(ruta_shader, ancho, alto, factor_escala=2, editor_ui=None)
 
@@ -130,6 +133,9 @@ def main():
                     f"Render: {estadisticas['render'] / n * 1000:.2f} ms | "
                     f"Frames: {n}"
                 )
+
+                mensaje = f"{estadisticas['captura'] / n * 1000} {estadisticas['render'] / n * 1000} {n}" #preparo el mensaje pal socket
+                sock_rendimiento.sendto(mensaje.encode('utf-8'), ("127.0.0.1", 9999)) #Lo mando al puerto 9999
 
             estadisticas = {
                 "captura": 0.0,

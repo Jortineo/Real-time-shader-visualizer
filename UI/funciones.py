@@ -6,6 +6,8 @@ import subprocess
 import sys
 import os
 
+from UI import rendimiento
+
 def buscar_shaders():
         shaders = []
 
@@ -85,3 +87,10 @@ def parar_shader(self):
         self.proceso_shader.terminate()
         self.proceso_shader = None
         print("Shader parao")
+
+def ejecutar_rendimiento():
+    global ventana_rendimiento
+
+    ventana_rendimiento = rendimiento.VentanaRendimiento()
+    ventana_rendimiento.show()
+    print("ventanao")

@@ -28,9 +28,8 @@ void main() {
     
     // 4. Muestrear el color final distorsionado y pixelado
     vec4 color_final = texture(u_screen_texture, uv);
-    
-    // Le añadimos un ligero toque verdoso estilo GameBoy antigua
-    color_final.g *= 1.2;
+
+    color_final = color_final.bgra;
     
     fragColor = color_final;
 }

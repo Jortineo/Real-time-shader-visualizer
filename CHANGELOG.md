@@ -1,4 +1,6 @@
 Updates
+10/12/26
+• Began implementing the performance window to monitor the resources used by the program. It still needs a lot of work but is funcional.
 10/11/26
 • Added functionalities to the menu, now you can also change the central photo to another one inside the images folder.
 • Now the front end is in Enlgish
