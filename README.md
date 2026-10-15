@@ -2,7 +2,7 @@ Note: This is my first actually deep project, so inside the code, things like fu
 
 A real-time shader visualizer made in python.
 
-This project renders glsl shaders in real time in the screen. It utilizes Dxcam to capture the screen and pass it to the renderer, which renders the shader using ModernGl. It also counts with a GUI made with PySide6.
+This program renders glsl shaders in real time in the screen. It utilizes Dxcam to capture the screen and pass it to the renderer, which renders the shader using ModernGl. It also counts with a GUI made with PySide6.
 
 Files:
 - capturer.py: This is where the dxcam and screen-capturing logic lives. It displays a borderless window that fits the whole screen, ignores mouse inputs and is always on top. The window uses pygame for now. It uses the Dxcam camera system to get the texture "behind" the window. main.py is also in charge of handling the uniform data sent from editor.py and actively change the shader's parameters based off of that. This is done by sending data to a socket using the socket library and then listening to it in renderer.py

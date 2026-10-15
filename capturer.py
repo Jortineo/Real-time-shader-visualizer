@@ -1,6 +1,3 @@
-import ctypes
-
-
 import os
 import sys
 import pygame
@@ -11,7 +8,6 @@ import socket
 
 import sys
 from config import ruta_shader as ruta_shader_por_defecto, FPS, PUERTO_UNIFORMS
-from PySide6.QtCore import QObject, Signal
 
 ruta_shader = sys.argv[1] if len(sys.argv) > 1 else ruta_shader_por_defecto
 

@@ -1,6 +1,6 @@
 #Aqui lo junto todo
 from PySide6.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QVBoxLayout
-
+from PySide6.QtCore import Qt
 import socket
 
 import config
@@ -105,6 +105,8 @@ class Ventana_base(QMainWindow):
 
 
         self.setCentralWidget(contenedor)
+
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
 
     def closeEvent(self, evento): # pa cerrar
         funciones.parar_shader(self)

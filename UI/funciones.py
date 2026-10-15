@@ -76,11 +76,14 @@ def ejecutar_shader(self):
         print(f"preparando para ejecutar {ruta_glsl}")
 
         ruta_base = os.path.dirname(os.path.abspath(config.__file__))
-        ruta_main_real = os.path.join(ruta_base, "capturer.py")
+        ruta_capturer_real = os.path.join(ruta_base, "capturer.py")
 
         parar_shader(self)
 
-        self.proceso_shader = subprocess.Popen([sys.executable, ruta_main_real, ruta_glsl])
+        uniforms_actuales = analizar_shader(ruta_glsl)
+        print(uniforms_actuales)
+
+        self.proceso_shader = subprocess.Popen([sys.executable, ruta_capturer_real, ruta_glsl])
 
 def parar_shader(self):
     if self.proceso_shader is not None and self.proceso_shader.poll() is None:
