@@ -15,6 +15,8 @@ Files:
 
 - config.py: This file simply contains file paths, constants and variables that several other scripts can use.
 
+Performance: WIP, but the capturer has been optimized with dxcam to only take around 1 ms to capture the screen and send it. For now, if the GPU also does not take long, the performance will show that the CPU is taking too long. This is because it waits to fit the VSync cap.
+
 This program counts with a folder to store shader effects.
 
 Shader notes:
