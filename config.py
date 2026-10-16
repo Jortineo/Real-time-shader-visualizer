@@ -15,6 +15,8 @@ ruta_FSR = os.path.join(CARPETA_VERTEX, "FSR.glsl")
 ruta_salida = os.path.join(CARPETA_VERTEX, "Salida.glsl")
 ruta_anti_alias = os.path.join(CARPETA_VERTEX, "Anti aliasing.glsl")
 
+ruta_json = os.path.join(BASE_DIR, "config_shaders.json")
+
 PUERTO_UNIFORMS = 50123
  
 FPS = 60

@@ -1,0 +1,128 @@
+{
+    "ASCII Art.glsl": {
+        "ruta": "C:\\Users\\Usuario\\Desktop\\proyecto Shaders\\proyecto Shaders\\Shaders\\ASCII Art.glsl",
+        "uniforms": [
+            {
+                "nombre": "u_font_size",
+                "tipo": "float",
+                "min": 4.0,
+                "max": 32.0,
+                "default": 12.0
+            },
+            {
+                "nombre": "u_color_mode",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 1.0
+            },
+            {
+                "nombre": "u_brightness_mod",
+                "tipo": "float",
+                "min": 0.1,
+                "max": 3.0,
+                "default": 1.0
+            }
+        ]
+    },
+    "CRT.glsl": {
+        "ruta": "C:\\Users\\Usuario\\Desktop\\proyecto Shaders\\proyecto Shaders\\Shaders\\CRT.glsl",
+        "uniforms": []
+    },
+    "Dithering.glsl": {
+        "ruta": "C:\\Users\\Usuario\\Desktop\\proyecto Shaders\\proyecto Shaders\\Shaders\\Dithering.glsl",
+        "uniforms": [
+            {
+                "nombre": "u_color_levels",
+                "tipo": "float",
+                "min": 1.0,
+                "max": 15.0,
+                "default": 4.0
+            },
+            {
+                "nombre": "u_pixel_size",
+                "tipo": "float",
+                "min": 1.0,
+                "max": 20.0,
+                "default": 1.0
+            },
+            {
+                "nombre": "u_dither_intensity",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 1.0
+            }
+        ]
+    },
+    "Kuwahara.glsl": {
+        "ruta": "C:\\Users\\Usuario\\Desktop\\proyecto Shaders\\proyecto Shaders\\Shaders\\Kuwahara.glsl",
+        "uniforms": [
+            {
+                "nombre": "RADIUS",
+                "tipo": "int",
+                "min": 1,
+                "max": 10,
+                "default": 5
+            },
+            {
+                "nombre": "Q_PARAMETER",
+                "tipo": "float",
+                "min": 1.0,
+                "max": 15.0,
+                "default": 8.0
+            },
+            {
+                "nombre": "HARDNESS",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 2.0,
+                "default": 1.0
+            }
+        ]
+    },
+    "Negative.glsl": {
+        "ruta": "C:\\Users\\Usuario\\Desktop\\proyecto Shaders\\proyecto Shaders\\Shaders\\Negative.glsl",
+        "uniforms": []
+    },
+    "Postprocesado.glsl": {
+        "ruta": "C:\\Users\\Usuario\\Desktop\\proyecto Shaders\\proyecto Shaders\\Shaders\\Postprocesado.glsl",
+        "uniforms": [
+            {
+                "nombre": "u_brightness",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0
+            },
+            {
+                "nombre": "u_contrast_amount",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0
+            },
+            {
+                "nombre": "u_saturation_amount",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0
+            },
+            {
+                "nombre": "u_vignette_amount",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0
+            },
+            {
+                "nombre": "u_grain_amount",
+                "tipo": "float",
+                "min": 0.0,
+                "max": 1.0,
+                "default": 0.0
+            }
+        ]
+    }
+}

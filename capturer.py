@@ -5,9 +5,10 @@ import dxcam
 import time
 import numpy as np
 import socket
+import json
 
 import sys
-from config import ruta_shader as ruta_shader_por_defecto, FPS, PUERTO_UNIFORMS
+from config import ruta_shader as ruta_shader_por_defecto, FPS, PUERTO_UNIFORMS, ruta_json
 
 ruta_shader = sys.argv[1] if len(sys.argv) > 1 else ruta_shader_por_defecto
 
@@ -54,6 +55,16 @@ def main():
     sock_uniforms.setblocking(False) #asi no espera a que lo haya siempre
 
     sock_rendimiento = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Socket pa madnar los datos de rendimiento
+
+    with open(ruta_json, "r") as archivo:
+        archivo_json = json.load(archivo)
+    
+    nombre_shader = ruta_shader.name
+    diccionario_uniforms = {} #diccionario pa guardar valores actuales de unfiroms
+
+    for uniform in archivo_json[f"{nombre_shader}"]["uniforms"]: #busco los valores actuales
+        diccionario_uniforms[uniform["nombre"]] = uniform["default"]
+
 
     render = Renderizador(ruta_shader, ancho, alto, factor_escala=2, editor_ui=None)
 

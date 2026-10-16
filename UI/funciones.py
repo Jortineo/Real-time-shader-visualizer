@@ -5,6 +5,7 @@ import config
 import subprocess
 import sys
 import os
+import json
 
 from UI import rendimiento
 
@@ -84,6 +85,16 @@ def ejecutar_shader(self):
         print(uniforms_actuales)
 
         self.proceso_shader = subprocess.Popen([sys.executable, ruta_capturer_real, ruta_glsl])
+
+        
+
+def actualizar_json(datos_nuevos: dict): #datos en diccionario
+    try: #try pq si no hay nada puede dar error
+        diccionario_json = json.load(config.ruta_json) #primero lo leo y lo convierto en diccionario
+    except Exception as error:
+        print(f"No hay JSON: {error}")
+
+
 
 def parar_shader(self):
     if self.proceso_shader is not None and self.proceso_shader.poll() is None:
