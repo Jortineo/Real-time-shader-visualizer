@@ -2,8 +2,6 @@ from PySide6.QtWidgets import QWidget, QMainWindow, QHBoxLayout, QVBoxLayout, QL
 from PySide6.QtCore import Qt, Slot, QTimer
 from PySide6.QtNetwork import QUdpSocket, QHostAddress
 
-import capturer
-
 import GPUtil
 
 tiempo_refresco = 1000 # ms

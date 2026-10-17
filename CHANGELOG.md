@@ -1,5 +1,13 @@
 Updates
 
+10/17/26
+
+• Added the json file where values now get stored and read.
+
+• Added a tools folder where i made a script that reads the shaders folder and rewrites the entire json file to fit shaders, uniforms, etc. This is for convenience for later when i change shaders and add more of them.
+
+• Fixed anti-aliasing and FSR. They used to receive the downscaled resolution instead of the full one, basically making them useless (that's why it didn't look like they did much before). It now looks 10x better. Rookie mistake.
+
 10/15/26
 
 • Expanded the performance Window. It now shows VRAM, gpu usage and gpu temperature.

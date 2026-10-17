@@ -81,10 +81,10 @@ def ejecutar_shader(self):
 
         parar_shader(self)
 
-        uniforms_actuales = analizar_shader(ruta_glsl)
-        print(uniforms_actuales)
+        estado = {"factor_escala": self.factor_escala, "uniforms": self.vistaPrevia.valores}
 
-        self.proceso_shader = subprocess.Popen([sys.executable, ruta_capturer_real, ruta_glsl])
+        self.proceso_shader = subprocess.Popen( #Popen y le paso el json tambien
+             [sys.executable, ruta_capturer_real, ruta_glsl, json.dumps(estado)]) 
 
         
 

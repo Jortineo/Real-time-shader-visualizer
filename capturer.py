@@ -14,6 +14,7 @@ ruta_shader = sys.argv[1] if len(sys.argv) > 1 else ruta_shader_por_defecto
 
 from ventana_nativa import VentanaNativa
 from renderer import Renderizador
+from pathlib import Path
 
 def main():
     os.environ['SDL_VIDEO_WINDOW_POS'] = "-5000,-5000" 
@@ -56,17 +57,29 @@ def main():
 
     sock_rendimiento = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Socket pa madnar los datos de rendimiento
 
-    with open(ruta_json, "r") as archivo:
+    estado = json.loads(sys.argv[2]) if len(sys.argv) > 2 else{} #lo manda la ui
+
+    with open(ruta_json, "r") as archivo: #lo saco en archivo
         archivo_json = json.load(archivo)
-    
-    nombre_shader = ruta_shader.name
-    diccionario_uniforms = {} #diccionario pa guardar valores actuales de unfiroms
 
-    for uniform in archivo_json[f"{nombre_shader}"]["uniforms"]: #busco los valores actuales
+    nombre_shader = Path(ruta_shader).name
+    info_shader = archivo_json.get(nombre_shader, {}) #saco la info del shader
+
+    diccionario_uniforms = {}
+    for uniform in info_shader.get("uniforms", []): #primero defaults
         diccionario_uniforms[uniform["nombre"]] = uniform["default"]
+    diccionario_uniforms.update(estado.get("uniforms", {})) # luego
 
 
-    render = Renderizador(ruta_shader, ancho, alto, factor_escala=2, editor_ui=None)
+    render = Renderizador(ruta_shader, ancho, alto, factor_escala=estado.get("factor_escala", 2), editor_ui=None)
+
+    def aplicar_uniform(nombre, valor):
+        prog = render.pasada_efecto.prog
+        if nombre in prog:
+            prog[nombre] = valor
+
+    for nombre, valor in diccionario_uniforms.items():
+        aplicar_uniform(nombre, valor)
 
     reloj = pygame.time.Clock()
     ejecutando = True
@@ -105,15 +118,13 @@ def main():
 
             nombre, tipo, valor_texto = datos.decode("utf-8").split(":") #Cojo los valores
             valor = int(valor_texto) if tipo == "int" else float(valor_texto)
-            print(f"Recibido: {nombre} = {valor} | ¿está en el programa? {nombre in render.pasada_efecto.prog}")
+            
 
             if nombre == "factor_escala": #Paso también el factor
-                render.factor_escala = valor
-                render.ancho_bajo = max(1, int(render.ancho // render.factor_escala))
-                render.alto_bajo = max(1, int(render.alto // render.factor_escala))
-
-            if nombre in render.pasada_efecto.prog: #nombre
-                render.pasada_efecto.prog[nombre] = valor
+                render.cambiar_factor(valor)
+            else:
+                diccionario_uniforms[nombre] = valor
+                aplicar_uniform(nombre, valor)
 
         inicio_render = time.perf_counter()
 

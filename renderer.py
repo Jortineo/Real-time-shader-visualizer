@@ -51,10 +51,7 @@ class Renderizador:
         self.idx_y = np.minimum((np.arange(self.alto_bajo) * factor_escala).astype(int), alto - 1)
 
         self.editor = editor_ui
-        if self.editor != None:
-            self.factor_escala = self.editor.factor_escala
-        else:
-            self.factor_escala = 2
+        self.factor_escala = factor_escala
 
         self.ctx.viewport = (0, 0, ancho, alto)
 
@@ -65,7 +62,7 @@ class Renderizador:
         self.fbo_efecto = self.ctx.framebuffer(color_attachments=[self.textura_efecto]) #dimensiones completas
 
         # fsr
-        self.textura_fsr = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4) #lo mismo pal fsr
+        self.textura_fsr = self.ctx.texture((self.ancho, self.alto), 4) #lo mismo pal fsr
         self.fbo_fsr = self.ctx.framebuffer(color_attachments=[self.textura_fsr])
         self.pasada_fsr = Pasada(
             self.ctx,
@@ -73,7 +70,7 @@ class Renderizador:
             config.ruta_FSR
         )
 
-        self.textura_anti_alias = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+        self.textura_anti_alias = self.ctx.texture((self.ancho, self.alto), 4)
         self.fbo_anti_alias = self.ctx.framebuffer(color_attachments=[self.textura_anti_alias])
         self.pasada_anti_alias = Pasada(
             self.ctx,
@@ -90,6 +87,18 @@ class Renderizador:
         self.pasada_efecto = None
         self.cambiar_shader(ruta_fragment_shader)
 
+    def cambiar_factor(self, factor): #Pa cambiar el factor
+        self.factor_escala = factor
+        self.ancho_bajo = max(1, int(self.ancho / factor))
+        self.alto_bajo = max(1, int(self.alto / factor))
+        self.idx_x = np.minimum((np.arange(self.ancho_bajo) * factor).astype(int), self.ancho - 1)
+        self.idx_y = np.minimum((np.arange(self.alto_bajo) * factor).astype(int), self.alto - 1)
+
+        for recurso in (self.fbo_efecto, self.textura_entrada, self.textura_efecto):
+            recurso.release()
+        self.textura_entrada = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+        self.textura_efecto = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
+        self.fbo_efecto = self.ctx.framebuffer(color_attachments=[self.textura_efecto])
     # ------------------------------------------------------------------
 
     def cambiar_shader(self, ruta_fragment_shader):
@@ -116,24 +125,7 @@ class Renderizador:
 
         #Actualizo TODO
         if self.editor is not None and self.factor_escala != self.editor.factor_escala:
-            self.factor_escala = self.editor.factor_escala
-            self.ancho_bajo = max(1, int(self.ancho // self.factor_escala))
-            self.alto_bajo = max(1, int(self.alto // self.factor_escala))
-            
-            # Recreamos dinámicamente las texturas que cambian de tamaño en la GPU
-            self.textura_entrada.release()
-            self.textura_efecto.release()
-            self.textura_fsr.release()
-            self.textura_anti_alias.release()
-            
-            self.textura_entrada = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
-            self.textura_efecto = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
-            self.textura_fsr = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
-            self.textura_anti_alias = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
-            
-            self.fbo_efecto = self.ctx.framebuffer(color_attachments=[self.textura_efecto])
-            self.fbo_fsr = self.ctx.framebuffer(color_attachments=[self.textura_fsr])
-            self.fbo_anti_alias = self.ctx.framebuffer(color_attachments=[self.textura_anti_alias])
+            self.cambiar_factor(self.editor.factor_escala) #esto recalcula tamaños y todo
         # bajo la resolucion de la captura
 
         factor = self.factor_escala
@@ -173,7 +165,7 @@ class Renderizador:
 
         self.pasada_anti_alias.ejecutar(
             self.fbo_anti_alias,
-            u_resolution=(self.ancho_bajo, self.alto_bajo),
+            u_resolution=(self.ancho, self.alto),
             u_screen_texture=0
         )
 
