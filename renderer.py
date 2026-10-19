@@ -3,6 +3,7 @@ import numpy as np
 import moderngl
 import config
 from PIL import Image
+from os import path
 
 
 VERTEX_SHADER = """

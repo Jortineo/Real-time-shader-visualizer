@@ -8,9 +8,9 @@ import socket
 import json
 
 import sys
-from config import ruta_shader as ruta_shader_por_defecto, FPS, PUERTO_UNIFORMS, ruta_json
+import config
 
-ruta_shader = sys.argv[1] if len(sys.argv) > 1 else ruta_shader_por_defecto
+ruta_shader = sys.argv[1] if len(sys.argv) > 1 else config.ruta_shader_por_defecto
 
 from ventana_nativa import VentanaNativa
 from renderer import Renderizador
@@ -51,15 +51,15 @@ def main():
     win_nativa.aplicar_frente(True)
 
     sock_uniforms = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Creo el socket para mandar los uniforms
-    sock_uniforms.bind(("127.0.0.1", PUERTO_UNIFORMS))
-    print(f"Escuchando uniforms en el puerto {PUERTO_UNIFORMS}")
+    sock_uniforms.bind(("127.0.0.1", config.PUERTO_UNIFORMS))
+    print(f"Escuchando uniforms en el puerto {config.PUERTO_UNIFORMS}")
     sock_uniforms.setblocking(False) #asi no espera a que lo haya siempre
 
     sock_rendimiento = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Socket pa madnar los datos de rendimiento
 
     estado = json.loads(sys.argv[2]) if len(sys.argv) > 2 else{} #lo manda la ui
 
-    with open(ruta_json, "r") as archivo: #lo saco en archivo
+    with open(config.ruta_json, "r") as archivo: #lo saco en archivo
         archivo_json = json.load(archivo)
 
     nombre_shader = Path(ruta_shader).name
@@ -163,7 +163,7 @@ def main():
 
             ultimo_informe = ahora
             
-        reloj.tick(FPS)
+        reloj.tick(config.FPS)
         #time.sleep(0.001) #Para asegurarme de esperar
 
     try:

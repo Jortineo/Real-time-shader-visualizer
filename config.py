@@ -17,6 +17,9 @@ ruta_anti_alias = os.path.join(CARPETA_VERTEX, "Anti aliasing.glsl")
 
 ruta_json = os.path.join(BASE_DIR, "config_shaders.json")
 
+CARPETA_FONTS = os.path.join(BASE_DIR, "Fonts")
+ruta_courier = os.path.join(CARPETA_FONTS, "cour.ttf")
+
 PUERTO_UNIFORMS = 50123
  
 FPS = 60
