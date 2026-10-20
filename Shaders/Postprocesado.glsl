@@ -14,14 +14,22 @@ uniform float u_saturation_amount;      // Si es 0.0, no quita saturación. Rang
 uniform float u_vignette_amount;        // Si es 0.0, no oscurece bordes. Rango en UI: 0.0 a 1.0
 uniform float u_grain_amount;           // Si es 0.0, no añade ruido. Rango en UI: 0.0 a 1.0
 uniform float u_time;                   // Tiempo para animar el grano
+uniform float u_bleeding_amount;           // min=0.0 max=1.0 default=0.5
 
 void main() {
     // CORRECCIÓN DE INVERSIÓN VERTICAL (La tuya de siempre)
     vec2 flippedTexcoord = vec2(v_texcoord.x, 1.0 - v_texcoord.y);
 
-    // 1. ÚNICA LECTURA DE TEXTURA (Idéntica a tu dithering)
-    vec4 originalColor = texture(u_screen_texture, flippedTexcoord);
-    vec3 color = originalColor.rgb;
+    float offset = 0.003 * u_bleeding_amount; //calculo el offset
+
+    // leo textura para el color bleeding en 3 canales
+    float rChan = texture(u_screen_texture, vec2(flippedTexcoord.x - offset, flippedTexcoord.y)).r;
+    float gChan = texture(u_screen_texture, flippedTexcoord).g; // El verde queda en el medio
+    float bChan = texture(u_screen_texture, vec2(flippedTexcoord.x + offset, flippedTexcoord.y)).b;
+    float alphaChan = texture(u_screen_texture, flippedTexcoord).a;
+
+    vec3 color = vec3(rChan, gChan, bChan);
+    vec4 originalColor = vec4(color, alphaChan);
 
     // 2. CORRECCIÓN DE COLOR (Diseñada para que el 0.0 sea el estado neutro)
     

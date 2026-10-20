@@ -50,8 +50,8 @@ void main() {
 
     vec4 originalColor = texture(u_screen_texture, pixelatedCoord);
 
-    int px = int(pixelatedCoord.x * screenResolution.x);
-    int py = int(pixelatedCoord.y * screenResolution.y);
+    int px = int(gl_FragCoord.x) % 4;
+    int py = int(gl_FragCoord.y) % 4; // Uso frag Coord en vez del pixelated coord de antes
     
     
     int x = px % 4;
@@ -61,7 +61,7 @@ void main() {
     float threshold = bayerMatrix[y * 4 + x];
     
     // color original rgb + el threshold en vec3 pa sumarlo Y -0.5 pa que en vez de estar de 0 a 1 esté de -0.5 a 0.5, alrededor de 0
-    vec3 ditheredColor = originalColor.rgb + (vec3(threshold) - 0.5) * (u_dither_intensity / levels);
+    vec3 ditheredColor = originalColor.rgb + (vec3(threshold) + 0.5) * (u_dither_intensity / levels);
     
    
     ditheredColor = clamp(ditheredColor, 0.0, 1.0);
