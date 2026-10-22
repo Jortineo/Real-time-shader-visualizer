@@ -1,5 +1,11 @@
 Updates
 
+10/22/26
+
+• Added a toon shader which is actually coded by me (Needs a bit more work)
+
+• Added a color bleeding effect to the general post-processing shader.
+
 10/17/26
 
 • Added the json file where values now get stored and read.
