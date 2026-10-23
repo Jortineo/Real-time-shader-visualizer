@@ -31,7 +31,7 @@ def buscar_imagenes():
         return imagenes
 
 def analizar_shader(ruta_shader:str):
-        IGNORADOS = {"u_screen_texture", "u_resolution", "u_time"}
+        IGNORADOS = {"u_screen_texture", "u_resolution", "u_time", "u_font_atlas"}
         listaUniforms = []
 
         with open(ruta_shader, "r", encoding='utf-8') as archivo:

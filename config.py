@@ -19,6 +19,8 @@ ruta_json = os.path.join(BASE_DIR, "config_shaders.json")
 
 CARPETA_FONTS = os.path.join(BASE_DIR, "Fonts")
 ruta_courier = os.path.join(CARPETA_FONTS, "cour.ttf")
+caracteres_ascii = " .:-=+*#%@" #De menos a mas, sin bordes de momento
+texturas_extra = {"u_font_atlas" : ruta_courier}
 
 PUERTO_UNIFORMS = 50123
  

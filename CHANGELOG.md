@@ -1,5 +1,9 @@
 Updates
 
+10/23/26
+
+• Improved the ASCII shader. It now receives an actual font. Looks really dark though, it still has to improve.
+
 10/22/26
 
 • Added a toon shader which is actually coded by me (Needs a bit more work)

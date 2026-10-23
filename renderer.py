@@ -4,6 +4,7 @@ import moderngl
 import config
 from PIL import Image
 from os import path
+from texturas import crear_atlas_font
 
 
 VERTEX_SHADER = """
@@ -85,6 +86,8 @@ class Renderizador:
             config.ruta_salida
         )
 
+        self.cache_texturas = {}
+
         self.pasada_efecto = None
         self.cambiar_shader(ruta_fragment_shader)
 
@@ -101,6 +104,17 @@ class Renderizador:
         self.textura_efecto = self.ctx.texture((self.ancho_bajo, self.alto_bajo), 4)
         self.fbo_efecto = self.ctx.framebuffer(color_attachments=[self.textura_efecto])
     # ------------------------------------------------------------------
+
+    def _texturas_del_shader(self):
+        prog = self.pasada_efecto.prog
+
+        for nombre, ruta in config.texturas_extra.items(): #cada textura en config
+            if nombre in prog: #si no lo usa, se descarta solo
+                if nombre not in self.cache_texturas:
+                    self.cache_texturas[nombre] = crear_atlas_font(
+                        self.ctx, ruta, config.caracteres_ascii
+                    )
+                yield nombre, self.cache_texturas[nombre]
 
     def cambiar_shader(self, ruta_fragment_shader):
         #Compila or recompila el programa
@@ -141,14 +155,18 @@ class Renderizador:
         self.textura_entrada.use(0) # la pongo en el 0
 
         # EJECUTO
+        extras = {}
+        for unidad, (nombre, tex) in enumerate(self._texturas_del_shader(), start=1):
+            tex.use(unidad) #la 0 es la captura
+            extras[nombre] = unidad #paso el número, NO la textura
 
         # Pase 1, efecto
-
         self.pasada_efecto.ejecutar(
             self.fbo_efecto,
             u_screen_texture=0, #uso la 0, es decir, la entrada
             u_resolution=(self.ancho_bajo, self.alto_bajo), #estos dos se ignoran si no los hay en el shader
-            u_time = tiempo
+            u_time = tiempo,
+            **extras #extras también
         )
 
         # Pase 2, FSR
