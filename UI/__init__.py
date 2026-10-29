@@ -18,26 +18,26 @@ class Ventana_base(QMainWindow):
         self.factor_escala = 2
         self.proceso_shader = None
 
-        # Estilo ----- Colores(+ a -oscuro):  #030303, #1c1621, #353535, #545454, #737373, #959595, #b9b9b9, #dedede
+        # Estilo ----- Colores(+ a -oscuro):  #000f27 #0a3672 #2884f9 #61ffff
         self.setStyleSheet(""" 
-        * {font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px; }
+        * {font-family: 'Constantia', 'Consolas', monospace; font-size: 12px; }
 
-        QMainWindow { background-color: #1c1621; }
+        QMainWindow { background-color: #000f27; }
 
-        QPushButton { background-color: #1c1621; color: #c9c9ca; border-radius: 5px; padding: 5px; }
-        QPushButton:hover { background-color: #1c1621; color: #c9c9ca; border: 1px solid #d5c382 }
-        QPushButton:pressed { background-color: #1c1621; border: 1px solid #77ebce}
+        QPushButton { background-color: #000f27; color: #ffffff; border-radius: 5px; padding: 5px; }
+        QPushButton:hover { background-color: #0a3672; color: #ffffff; border: 1px solid #61ffff }
+        QPushButton:pressed { background-color: #000f27; border: 1px solid #77ebce}
 
-        QListWidget { background-color: #1c1621; color: #c9c9ca; border-radius: 8px; outline: none }
+        QListWidget { background-color: #000f27; color: #ffffff; border-radius: 8px; outline: none }
         QListWidget::item {padding: 4px 12px}
-        QListWidget::item:hover { color: #d5c382;}
-        QListWidget::item:selected { color: #77ebce; border-radius: 4px; border-left: 3px solid #d5c382;}
+        QListWidget::item:hover { color: #ffffff;}
+        QListWidget::item:selected { color: #77ebce; border-radius: 4px; border-left: 3px solid #61ffff;}
 
         QSlider::groove:horizontal { height: 5px; background-color: #545454; border-radius: 2px; margin: 0px 4 px;}
-        QSlider::handle:horizontal { background-color: #c9c9ca; border: 3px solid #545454; height: 10px; width: 12px; margin: -4px 0px; border-radius: 6px;}
-        QSlider::sub-page:horizontal { background-color: #c9c9ca; border-radius: 2px}
+        QSlider::handle:horizontal { background-color: #ffffff; border: 3px solid #61ffff; height: 10px; width: 12px; margin: -4px 0px; border-radius: 6px;}
+        QSlider::sub-page:horizontal { background-color: #ffffff; border-radius: 2px}
 
-        QMenuBar {background-color: #1c1621; margin: 0px 4px;}
+        QMenuBar {background-color: #000f27; margin: 0px 4px;}
         QMenuBar::item:hover {background-color: #545454; border-radius: 12px;}
         QMenuBar::item:selected {background-color: #737373; border-radius: 12px;}
         """)

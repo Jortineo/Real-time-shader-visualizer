@@ -20,8 +20,8 @@ class ListaPersonalizada(QListWidget):
             painter.setRenderHint(QPainter.Antialiasing)
 
             degradado = QLinearGradient(0, 0, self.width(), self.height())
-            degradado.setColorAt(0.0, QColor("#77ebce"))
-            degradado.setColorAt(1.0, QColor("#d14dea"))
+            degradado.setColorAt(0.0, QColor("#61ffff"))
+            degradado.setColorAt(1.0, QColor("#000f27"))
 
             grosor = 2
             pen = QPen(degradado, grosor)
